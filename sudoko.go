@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-
-	"github.com/01-edu/z01"
 )
 
 func main() {
@@ -24,13 +22,13 @@ func main() {
 				for y := 0; y < 9; y++ {
 					for x := 0; x < 9; x++ {
 						if x != 8 {
-							z01.PrintRune(rune(table[y][x]))
-							z01.PrintRune(32)
+							fmt.Print(string(table[y][x]))
+							fmt.Print(" ")
 						} else {
-							z01.PrintRune(rune(table[y][x]))
+							fmt.Print(string(table[y][x]))
 						}
 					}
-					z01.PrintRune(10)
+					fmt.Println()
 				}
 
 			} else {
