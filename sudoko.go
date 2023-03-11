@@ -5,8 +5,6 @@ package main
 import (
 	"fmt"
 	"os"
-
-	"github.com/01-edu/z01"
 )
 
 func main() {
@@ -29,7 +27,8 @@ func main() {
 						fmt.Print(string(table[c][r]))
 					}
 				}
-				z01.PrintRune(10)
+				fmt.Print()
+				// z01.PrintRune(10)
 			}
 		} else {
 			fmt.Println("Error: repeated element in the input array") // if the input in not valid raise an error
