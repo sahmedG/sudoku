@@ -1,10 +1,10 @@
 package main
 
-/* A program to solve a sudoku game using inputs from the terminal */
-
 import (
 	"fmt"
 	"os"
+
+	"github.com/01-edu/z01"
 )
 
 func main() {
@@ -12,52 +12,53 @@ func main() {
 	arguments := []string(Args)
 
 	// check the validity of the inputs and create solution table
-	if IsItValidInput(arguments) == true {
-		table := [9][9]rune{}
-		table = InitiateTable(table, arguments)
 
-		// upon recieving a slution fill-out the created table
-		if FinalSolve(&table) == true {
-			for c := 0; c < 9; c++ {
-				for r := 0; r < 9; r++ {
-					if r != 8 {
-						fmt.Print(string(table[c][r]))
-						fmt.Print(" ")
-					} else {
-						fmt.Print(string(table[c][r]))
+	if ValidateInput(arguments) == true {
+		table := [9][9]rune{}
+		// create a board with provided elements
+		table = fillTable(table, arguments)
+
+		// upon recieving a solution fill-out the created table
+		if IsItSolved(&table) == true {
+			if isBoardValid(&table) {
+				for y := 0; y < 9; y++ {
+					for x := 0; x < 9; x++ {
+						if x != 8 {
+							z01.PrintRune(rune(table[y][x]))
+							z01.PrintRune(32)
+						} else {
+							z01.PrintRune(rune(table[y][x]))
+						}
 					}
+					z01.PrintRune(10)
 				}
-				fmt.Println()
+
+			} else {
+				fmt.Println("Error: Duplicated values invalid solution") // if the board has duplicates value then solution invalid
 			}
-		} else {
-			fmt.Println("Error: repeated element in the input array") // if the input in not valid raise an error
 		}
 	}
 }
 
 // input validity check
-func IsItValidInput(arguments []string) bool {
+func ValidateInput(args []string) bool {
 	// check if the input array has 9 elements
-	if len(arguments) == 0 {
-		fmt.Println("Error: You didn't input any arrays") // Invalid input
-		return false
-
-	} else if len(arguments) < 9 && len(arguments) > 1 {
-		fmt.Println("Error: Missing one or more arrays") // Invalid input
+	if len(args) != 9 {
+		fmt.Println("Error: You entered wrong number of arrays") // Invalid input
 		return false
 	}
 	// check each element inside the array has 9 elemnts
-	for i := 0; i < len(arguments); i++ {
-		if len(arguments[i]) != 9 {
-			fmt.Println("Error: one array is less than 9 elements") //  invalid input
+	for i := 0; i < len(args); i++ {
+		if len(args[i]) != 9 {
+			fmt.Println("Error: One or more arrays has less than 9 elements") //  invalid input
 			return false
 		}
 	}
-	// check if the elements are between 1 and 9
-	for i := 0; i < len(arguments); i++ {
-		for _, elem := range arguments[i] {
-			if (elem < 49 || elem > 57) && elem != 46 {
-				fmt.Println("Error: one of the elements is above 9 or less than 1") // Invalid input
+	// check invalid values
+	for i := 0; i < len(args); i++ {
+		for _, value := range args[i] {
+			if (value < 49 || value > 57) && value != 46 {
+				fmt.Println("Error: One or more arrays has a non integer element or a zero") // IInvalid input
 				return false
 			}
 		}
@@ -66,17 +67,17 @@ func IsItValidInput(arguments []string) bool {
 }
 
 // initiate the created table with provided input
-func InitiateTable(table [9][9]rune, arguments []string) [9][9]rune {
-	for i := range arguments {
-		for j := range arguments[i] {
-			table[i][j] = rune(arguments[i][j])
+func fillTable(table [9][9]rune, args []string) [9][9]rune {
+	for i := range args {
+		for j := range args[i] {
+			table[i][j] = rune(args[i][j])
 		}
 	}
 	return table
 }
 
-// checking for empty spots in the table
-func IsItEmpty(table *[9][9]rune) bool {
+// checking for empty spot in the table
+func isDots(table *[9][9]rune) bool {
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			if table[i][j] == '.' {
@@ -87,23 +88,79 @@ func IsItEmpty(table *[9][9]rune) bool {
 	return false
 }
 
-// check if the answer is valid
+// check the final board has no duplicates
+func hasDuplicates(counter [100]int) bool {
+	for i, count := range counter {
+		if i == 0 {
+			continue
+		}
+		if count > 1 {
+			return true
+		}
+	}
+	return false
+}
 
-func IsItValid(table *[9][9]rune, r int, c int, z rune) bool {
+// check for the final board solution
+func isBoardValid(board *[9][9]rune) bool {
+
+	//check duplicates by row
+	for row := 0; row < 9; row++ {
+		counter := [100]int{}
+		for col := 0; col < 9; col++ {
+			counter[board[row][col]]++
+		}
+		if hasDuplicates(counter) {
+			return false
+		}
+	}
+
+	//check duplicates by column
+	for row := 0; row < 9; row++ {
+		counter := [100]int{}
+		for col := 0; col < 9; col++ {
+			counter[board[col][row]]++
+		}
+		if hasDuplicates(counter) {
+			return false
+		}
+	}
+
+	//check 3x3 section
+	for i := 0; i < 9; i += 3 {
+		for j := 0; j < 9; j += 3 {
+			counter := [100]int{}
+			for row := i; row < i+3; row++ {
+				for col := j; col < j+3; col++ {
+					counter[board[row][col]]++
+				}
+				if hasDuplicates(counter) {
+					return false
+				}
+			}
+		}
+	}
+
+	return true
+}
+
+// check if the generated value fits in the board
+
+func isValid(table *[9][9]rune, x int, y int, z rune) bool {
 	// check double int
 	for i := 0; i < 9; i++ {
-		if z == table[i][r] {
+		if z == table[i][x] {
 			return false
 		}
 	}
 	for j := 0; j < 9; j++ {
-		if z == table[c][j] {
+		if z == table[y][j] {
 			return false
 		}
 	}
-	// square check
-	a := r / 3
-	b := c / 3
+	//square check
+	a := x / 3
+	b := y / 3
 	for k := 3 * a; k < 3*(a+1); k++ {
 		for l := 3 * b; l < 3*(b+1); l++ {
 			if z == table[l][k] {
@@ -114,27 +171,24 @@ func IsItValid(table *[9][9]rune, r int, c int, z rune) bool {
 	return true
 }
 
-// backtracking algorithm
-func FinalSolve(table *[9][9]rune) bool {
-	// check no more empty spots in the table
-	if !IsItEmpty(table) {
+// backtracking to solve all empty spots
+func IsItSolved(table *[9][9]rune) bool {
+
+	//check no more empty spots in the table
+	if !isDots(table) {
 		return true
 	}
-	// start the solve process
-	for c := 0; c < 9; c++ {
-		for r := 0; r < 9; r++ {
-			// check if the element is empty spot
-			if table[c][r] == '.' {
+	for y := 0; y < 9; y++ {
+		for x := 0; x < 9; x++ {
+			if table[y][x] == '.' {
 				for z := '1'; z <= '9'; z++ {
-					// check if the generated element is valid
-					if IsItValid(table, r, c, z) {
-						table[c][r] = z
-						// return the final table upon completion of the backtracking algorithm
-						if FinalSolve(table) {
+					if isValid(table, x, y, z) {
+						table[y][x] = z
+						if IsItSolved(table) {
 							return true
 						}
 					}
-					table[c][r] = '.'
+					table[y][x] = '.'
 				}
 				return false
 			}
