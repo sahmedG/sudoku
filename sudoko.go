@@ -27,8 +27,7 @@ func main() {
 						fmt.Print(string(table[c][r]))
 					}
 				}
-				fmt.Print()
-				// z01.PrintRune(10)
+				fmt.Println()
 			}
 		} else {
 			fmt.Println("Error: repeated element in the input array") // if the input in not valid raise an error
